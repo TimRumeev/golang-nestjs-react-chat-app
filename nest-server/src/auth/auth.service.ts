@@ -53,7 +53,14 @@ export class AuthService {
 			},
 		});
 	}
-
+	async findUserById(id: string) {
+		const id1 = Number(id);
+		return await this.prismaService.userModel.findFirst({
+			where: {
+				id: id1,
+			},
+		});
+	}
 	// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 	async loginUser(email: string) {
 		const payload = { email };

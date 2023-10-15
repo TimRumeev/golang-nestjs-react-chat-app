@@ -2,22 +2,20 @@ import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
 import { PrismaService } from "./database/database.service";
-import { MessagesModule } from "./messages/messages.module";
-import { RoomsModule } from "./rooms/rooms.module";
 import { AuthMiddleware } from "./middleware/auth-middleware";
 import { AuthController } from "./auth/auth.controller";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { PassportModule } from "@nestjs/passport";
 import { getJWTConfig } from "./configs/jwt.config";
-import { RoomsController } from "./rooms/rooms.controller";
+import { ChatRoomsModule } from "./chat-rooms/chat-rooms.module";
+import { AppService } from "./app.service";
+import { AppController } from "./app.controller";
 
 @Module({
 	imports: [
 		DatabaseModule,
 		AuthModule,
-		MessagesModule,
-		RoomsModule,
 		PassportModule.register({
 			session: false,
 		}),
@@ -26,11 +24,13 @@ import { RoomsController } from "./rooms/rooms.controller";
 			inject: [ConfigService],
 			useFactory: getJWTConfig,
 		}),
+		ChatRoomsModule,
 	],
-	providers: [PrismaService, JwtService],
+	providers: [PrismaService, AppService, ConfigService],
+	controllers: [AppController],
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(AuthMiddleware).forRoutes(RoomsController);
+		consumer.apply(AuthMiddleware).forRoutes("v1/chat-rooms/create");
 	}
 }

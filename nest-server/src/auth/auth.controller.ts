@@ -8,17 +8,19 @@ import {
 	Res,
 	UsePipes,
 	ValidationPipe,
+	Version,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login.user.dto";
 import { CreateUserDto } from "./dto/create.user.dto";
 import { Response as res, response } from "express";
-
+import { ApiTags } from "@nestjs/swagger";
+@ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
-	@UsePipes(new ValidationPipe())
+	//@UsePipes(new ValidationPipe())
 	@Post("register")
 	async register(@Body() dto: CreateUserDto, @Res({ passthrough: true }) response: res) {
 		const oldUser = await this.authService.findUser(dto.email);
@@ -30,8 +32,8 @@ export class AuthController {
 
 		return this.authService.createUser(dto);
 	}
-
-	@UsePipes(new ValidationPipe())
+	@Version("1")
+	//@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post("login")
 	async login(@Body() dto: LoginUserDto, @Res({ passthrough: true }) response: res) {
@@ -39,7 +41,11 @@ export class AuthController {
 		const jwt = this.authService.loginUser(email);
 		response.cookie("jwt", (await jwt).token, {
 			expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+			secure: false,
 		});
+		const user = await this.authService.findUser(email);
+
+		return { user: user, jwt: jwt };
 	}
 
 	//, { expires: new Date(Date.now() + 1000 * 60 * 60 * 24) }

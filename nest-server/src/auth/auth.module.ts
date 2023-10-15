@@ -8,9 +8,10 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { getJWTConfig } from "src/configs/jwt.config";
 import { DatabaseModule } from "src/database/database.module";
+import { AuthGateway } from "./auth.gateway";
 
 @Module({
-	providers: [AuthService, PrismaService, JwtStrategy, JwtService],
+	providers: [AuthService, PrismaService, JwtStrategy, JwtService, AuthGateway],
 	controllers: [AuthController],
 	imports: [
 		ConfigModule,

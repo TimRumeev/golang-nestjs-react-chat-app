@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.1.0",
     "@fastify/cookie": "^9.1.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^3.1.1",
@@ -30,6 +31,7 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/platform-fastify": "^10.2.6",
     "@nestjs/platform-socket.io": "^10.2.6",
+    "@nestjs/swagger": "^7.1.12",
     "@nestjs/websockets": "^10.2.6",
     "@prisma/client": "^5.3.1",
     "@types/bcryptjs": "^2.4.4",
