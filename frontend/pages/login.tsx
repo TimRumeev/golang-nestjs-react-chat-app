@@ -5,7 +5,7 @@ import apiService from "../utils/api.service";
 import { User, UserInfo } from "../types/model.type";
 import axios, { AxiosError } from "axios";
 import { LoadingSpinner } from "../components/Loading";
-import env from "../constants/env.constants";
+import env from "@/constants/env.constant";
 
 export default function LoginPage() { 
 	const { login } = useAuth()
