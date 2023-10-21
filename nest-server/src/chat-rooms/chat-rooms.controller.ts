@@ -7,12 +7,14 @@ import {
 	NotFoundException,
 	Param,
 	Post,
+	UsePipes,
 	Version,
 } from "@nestjs/common";
 import { ChatRoomsService } from "./chat-rooms.service";
 import { ApiOperation, ApiParam } from "@nestjs/swagger";
 import { CreateChatRoomDto } from "./dto/create-chat-room.dto";
 import { DeleteChatRoomDto } from "./dto/delete-chat-room.dto";
+import { AuthMiddleware } from "src/middleware/auth-middleware";
 
 @Controller("chat-rooms")
 export class ChatRoomsController {

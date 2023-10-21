@@ -27,7 +27,7 @@ export class AuthMiddleware implements NestMiddleware {
 		} catch (e) {
 			throw new UnauthorizedException("user is not authorized");
 		}
-
+		res.statusCode = 401;
 		next();
 	}
 

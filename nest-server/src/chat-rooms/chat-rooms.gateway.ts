@@ -31,7 +31,7 @@ import { SocketAuthGuard } from "src/auth/guards/socket-auth.guard";
 	},
 	allowEIO3: true,
 })
-export class ChatRoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class ChatRoomsGateway implements OnGatewayInit {
 	constructor(private chatRoomsService: ChatRoomsService) {}
 
 	@WebSocketServer() server: Server;
@@ -39,15 +39,6 @@ export class ChatRoomsGateway implements OnGatewayInit, OnGatewayConnection, OnG
 	afterInit(server: any) {
 		console.log(`Server initializied`);
 	}
-
-	handleConnection(client: Socket) {
-		console.log(`Connected: ${client.id}`);
-	}
-
-	handleDisconnect(client: Socket) {
-		console.log(`Disconnected: ${client.id}`);
-	}
-
 	//@UsePipes(new ValidationPipe())
 	@UseGuards(SocketAuthGuard)
 	@SubscribeMessage(SOCKET_EVENT.JOIN_CHAT_ROOM)

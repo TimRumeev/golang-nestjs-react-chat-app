@@ -34,7 +34,10 @@ export class AuthGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	async handleConnection(client: ISocket, ...args: any[]) {
 		const { id } = client;
 		const { userId } = client.handshake.query;
-
+		if (!userId) {
+			client.disconnect();
+			return;
+		}
 		if (typeof userId !== "string") {
 			client.disconnect();
 
@@ -50,7 +53,6 @@ export class AuthGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		client.data.user = { id: user.id, username: user.username };
 
 		Logger.log(`Client connected`, { id, user: client.data.user });
-		return;
 	}
 
 	handleDisconnect(client: ISocket) {

@@ -1,14 +1,16 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { useRouter } from "next/router";
 import { useAuth, useAuthRedirect } from "../../utils/useAuth";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Chat, ChatRoom } from "../../types/model.type";
 import { ErrorBox } from "../../components/ErrorBox";
 import { LoadingSpinner } from "../../components/Loading";
-import apiService from "../../utils/api.service";
 import env from "@/constants/env.constant";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
+import { cookies } from "next/headers";
+import { getCookie } from "cookies-next";
+import { UserContext } from "@/context/auth.context";
 
 
 async function getChatRoomData(id: string) {
@@ -21,9 +23,14 @@ async function getChatRoomData(id: string) {
 		// if(res.ok) { 
 		// 	return data
 		// }
+		const router = useRouter()
 		const id1 = Number(id)
-		const res = await fetch(`${env.API_BASE_URL}/v1/chatRooms/${id1}`)
-		const data = res.json()
+		const res = axios.get(`http://localhost:3001/v1/chat-rooms/${id1}`)
+		if((await res).status == 401) {
+			router.push("/login")
+		}
+		const res1 = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`)
+		const data = res1.json()
 		return data
 	} catch (error) {
 		if (error instanceof AxiosError) {
@@ -43,12 +50,17 @@ async function getChatRoomData(id: string) {
 export default function chatRoomPage() { 
 	const router = useRouter();
   	const id = router.query.id as string;
-  	const { user, socket, sendMessageChatRoom, deleteMessageChatRoom } = useAuth(); // Updated to use `user` instead of `userId`
+  	const { socket, sendMessageChatRoom, deleteMessageChatRoom } = useAuth(); // Updated to use `user` instead of `userId`
   	const [data, setData] = useState<Omit<ChatRoom, 'chats'>>();
   	const [chats, setChats] = useState<Chat[]>();
   	const [loading, setLoading] = useState(true);
   	const [error, setError] = useState('');
-	useAuthRedirect({ user })
+	const {user, setUser} = useContext(UserContext)
+
+	const jwt = getCookie("jwt")
+	console.log(jwt);
+	
+	useAuthRedirect({user, jwt})
 
 	useEffect(() => {
 		getChatRoomData(id)

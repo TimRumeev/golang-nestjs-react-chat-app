@@ -1,19 +1,28 @@
 import {useRouter} from "next/router"
-import { useAuth } from "../utils/useAuth";
-import { useState } from "react";
-import apiService from "../utils/api.service";
+import React, { PropsWithChildren, Children, createContext, useContext, useState, Dispatch, SetStateAction } from "react";
 import { User, UserInfo } from "../types/model.type";
 import axios, { AxiosError } from "axios";
 import { LoadingSpinner } from "../components/Loading";
 import env from "@/constants/env.constant";
+import { render } from "react-dom";
+import UserProvider, { UserContext } from "@/context/auth.context";
+import { useAuth } from "@/utils/useAuth";
+
+
 
 export default function LoginPage() { 
-	const { login } = useAuth()
 	const router = useRouter()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [loading, setLoading] = useState(false)
+	const {user, setUser} = useContext(UserContext)
+	const { login } = useAuth()
+	// if(!context)  { 
+	// 	return null
+	// }
 
+	// const { user, setUser } = context
+	
 	const handleInputEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setEmail(e.target.value)
 	}
@@ -51,14 +60,10 @@ export default function LoginPage() {
 			
 			const data = await res.json()
 			if(res.ok) {
-				const user: UserInfo = {
-					username: data.user.username,
-					id: data.user.id
-				}
-				localStorage.setItem('user-data', JSON.stringify(user))
-				router.push('/')
+				setUser(data.user)
+				login(data.user)
+				router.push('/')	
 			}	
-			
 			
 		} catch(error) { 
 			if (error instanceof AxiosError) { 
@@ -77,39 +82,40 @@ export default function LoginPage() {
 			alert('Unknown error')
 		} finally{
 			setLoading(false)
+			
 		}
 	}
 
 	return (
-    <div className="mt-16">
-      <LoadingSpinner isLoading={loading} />
+		<div className="mt-16">
+			<LoadingSpinner isLoading={loading} />
 
-      <h1 className="text-xl lg:text-3xl text-left lg:text-center mb-1 lg:mb-6">Enter your name</h1>
-      <form onSubmit={handleLogin}>
-        <input
-          className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
-          type="text"
-          placeholder="JhonDoe@gmail.com"
-          value={email} // Bind the input value to 'username'
-          onChange={handleInputEmailChange} // Handle input changes
-        />
-		<input
-		  className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
-          type="password"
-          placeholder="password"
-          value={password} // Bind the input value to 'username'
-          onChange={handleInputPasswordChange} // Handle input changes
-		/>
+			<h1 className="text-xl lg:text-3xl text-left lg:text-center mb-1 lg:mb-6">Enter your name</h1>
+			<form onSubmit={handleLogin}>
+				<input
+				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
+				type="text"
+				placeholder="JhonDoe@gmail.com"
+				value={email} // Bind the input value to 'username'
+				onChange={handleInputEmailChange} // Handle input changes
+				/>
+				<input
+				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
+				type="password"
+				placeholder="password"
+				value={password} // Bind the input value to 'username'
+				onChange={handleInputPasswordChange} // Handle input changes
+				/>
 
-        <button
-          type="submit"
-          className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl bg-teal-500 font-medium rounded-r-lg lg:rounded-r-xl mt-2"
-        >
-          Submit
-        </button>
-      </form>
-    </div>
-	
+				<button
+				type="submit"
+				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl bg-teal-500 font-medium rounded-r-lg lg:rounded-r-xl mt-2"
+				
+				>
+				Submit
+				
+				</button>
+			</form>
+		</div>
   );
 }
-

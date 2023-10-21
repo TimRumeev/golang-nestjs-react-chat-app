@@ -11,6 +11,7 @@ import { getJWTConfig } from "./configs/jwt.config";
 import { ChatRoomsModule } from "./chat-rooms/chat-rooms.module";
 import { AppService } from "./app.service";
 import { AppController } from "./app.controller";
+import { ChatRoomsController } from "./chat-rooms/chat-rooms.controller";
 
 @Module({
 	imports: [
@@ -31,6 +32,6 @@ import { AppController } from "./app.controller";
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(AuthMiddleware).forRoutes("v1/chat-rooms/create");
+		consumer.apply(AuthMiddleware).forRoutes(ChatRoomsController);
 	}
 }

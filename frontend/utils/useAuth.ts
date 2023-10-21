@@ -1,14 +1,17 @@
-import { use, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Socket, io } from "socket.io-client";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
 import env from "@/constants/env.constant";
-const USER_DATA = "user-data";
-type User = { id: number; username: string; email: string; password?: string };
+import axios from "axios";
+import { User } from "@/types/model.type";
+import { NextRequest } from "next/server";
+import { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
+import { UserContext } from "@/context/auth.context";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const { user, setUser } = useContext(UserContext);
 
   socket?.on("connect", () => {
     console.info(`Socket connected: ${socket?.id}`);
@@ -19,14 +22,8 @@ export function useAuth() {
   });
   //ADD COOKIES AUTH!!!!!!!!!!!!!!!!
   useEffect(() => {
-    const storageUserData = localStorage.getItem(USER_DATA);
-    if (storageUserData) {
-      const parsedUserData = JSON.parse(storageUserData);
-      setUser(parsedUserData);
-
-      setSocket(
-        io(env.SOCKET_SERVER_URL, { query: { userId: parsedUserData.id } })
-      );
+    if (user.id) {
+      setSocket(io(env.SOCKET_SERVER_URL, { query: { userId: user.id } }));
     }
   }, []);
 
@@ -36,15 +33,13 @@ export function useAuth() {
     email: string;
     password?: string;
   }) => {
-    localStorage.setItem(USER_DATA, JSON.stringify(userData));
-    setUser(userData);
-
     setSocket(io(env.SOCKET_SERVER_URL, { query: { userId: userData.id } }));
   };
 
   const logout = async () => {
-    localStorage.removeItem(USER_DATA);
-    setUser(null);
+    const res = axios.get("http://localhost:3001/v1/auth/logout", {
+      withCredentials: true,
+    });
 
     socket?.disconnect();
     setSocket(null);
@@ -78,18 +73,21 @@ export function useAuth() {
 
 export function useAuthRedirect({
   user,
+  jwt,
   redirectTo = "/login",
 }: {
-  user: User | null;
+  user: User | undefined;
+  jwt: string | undefined;
   redirectTo?: string;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
-    if (!isLoading && !user) {
+    console.log(user?.id, user?.email, user?.username);
+
+    if (!isLoading && !jwt) {
       console.log("Redirecting to login page");
-      router.push(redirectTo);
+      router.push("/login");
     }
     setIsLoading(false);
   }, [router, user, redirectTo, isLoading]);
