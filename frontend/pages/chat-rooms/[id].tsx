@@ -23,14 +23,13 @@ async function getChatRoomData(id: string) {
 		// if(res.ok) { 
 		// 	return data
 		// }
-		const router = useRouter()
+		
 		const id1 = Number(id)
-		const res = axios.get(`http://localhost:3001/v1/chat-rooms/${id1}`)
-		if((await res).status == 401) {
-			router.push("/login")
-		}
-		const res1 = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`)
-		const data = res1.json()
+		const res = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`)
+		// if (res.status === 401) { 
+		// 	return null;
+		// }
+		const data = res.json()
 		return data
 	} catch (error) {
 		if (error instanceof AxiosError) {
@@ -42,7 +41,7 @@ async function getChatRoomData(id: string) {
 
       	throw new Error('Failed connect to server');
     	}
-
+		console.log(error)
     	throw new Error('Unknown error');
 	}
 }
@@ -56,24 +55,37 @@ export default function chatRoomPage() {
   	const [loading, setLoading] = useState(true);
   	const [error, setError] = useState('');
 	const {user, setUser} = useContext(UserContext)
-
-	const jwt = getCookie("jwt")
-	console.log(jwt);
 	
-	useAuthRedirect({user, jwt})
+	useAuthRedirect({user})
 
 	useEffect(() => {
-		getChatRoomData(id)
-				.then((res) => {
-					const { chats, ...rest } = res
-					setData(rest)
-					setChats(chats)
-					setLoading(false)
-				})
-				.catch((err) => {
-					setError(err.message)
-					setLoading(false)
-				})
+		// getChatRoomData(id)
+		// 		.then((res) => {
+		// 			const { chats, ...rest } = res
+		// 			setData(rest)
+		// 			setChats(chats)
+		// 			setLoading(false)
+		// 		})
+		// 		.catch((err) => {
+		// 			setError(err.message)
+		// 			setLoading(false)
+		// 		})
+		
+		const res = getChatRoomData(id)
+		if(!res) { 
+			router.push("/login")
+			return
+		}		
+		res.then((res) => {
+				const { chats, ...rest } = res
+				setData(rest)
+				setChats(chats)
+				setLoading(false)
+			})
+			.catch((err) => {
+				setError(err.message)
+				setLoading(false)
+			})
 	}, [id])
 
 	const [newMessage, setNewMessage] = useState('')
@@ -158,9 +170,8 @@ export default function chatRoomPage() {
 					return (
 						// => index
 						<div key={chat.id} className={className}>
-							{!isCurrentUser && (
-								<p className="text-sm font-medium mb-1 text-gray-400">~ {chat.user.username}</p>
-							)}
+							
+							<p className="text-sm font-medium mb-1 text-gray-400">~ {user.username}</p>
 							<p>{chat.message}</p>
 							<p className="text-right text-gray-400">
 								{isCurrentUser && (

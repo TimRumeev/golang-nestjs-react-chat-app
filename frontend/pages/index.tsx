@@ -2,16 +2,17 @@ import axios, { AxiosError } from "axios";
 import { ChatRoom, ChatRoomsData } from "../types/model.type";
 import apiService from "../utils/api.service";
 import { useAuth, useAuthRedirect} from "../utils/useAuth";
-import {useRouter} from "next/router"
+import {NextRouter, useRouter} from "next/router"
 import React, { useContext, useEffect, useState } from "react";
 import { ErrorBox } from "../components/ErrorBox";
 import { LoadingSpinner } from "../components/Loading";
 import { getCookie } from "cookies-next";
 import { UserContext } from "@/context/auth.context";
+import env from "@/constants/env.constant";
 
 
-async function getChatRoomsData() {
-	const router = useRouter()
+
+async function getChatRoomsData(router: NextRouter) {
 	try {
 		// const res = await axios.get("http://localhost:3001/v1/chat-rooms")
 		// console.log((await res).status);
@@ -19,11 +20,11 @@ async function getChatRoomsData() {
 		// if((await res).status == 401) { 
 		// 	router.push("/login")
 		// }
-		const code = await apiService.get<ChatRoomsData>("/v1/chat-rooms")
-		if(code.status === 401) { 
+		const code = axios.get(`${env.API_BASE_URL}/v1/chat-rooms`, { withCredentials: true})
+		if((await code).status === 401) { 
 			router.push('/login')
 		}
-		const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms")
+		const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
 		return data
 	} catch (err) { 
 		if (err instanceof AxiosError) { 
@@ -44,14 +45,10 @@ export default function Home() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
 	const {user, setUser} = useContext(UserContext)
-	const jwt = getCookie("jwt")
 	
-    useAuthRedirect({user, jwt})
+	useAuthRedirect({user})
 	useEffect(() => {
-		if(!jwt) { 
-			router.push('/login')
-		}
-		const res = getChatRoomsData()
+		const res = getChatRoomsData(router)
 			.then((res) => {
 				setData(res)
 				setLoading(false)

@@ -52,6 +52,7 @@ export default function LoginPage() {
 				method: "POST",
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email, password }),
+					
 			})
 			axios.post("http://localhost:3001/v1/auth/login", {
 				email: email,
@@ -60,6 +61,7 @@ export default function LoginPage() {
 			
 			const data = await res.json()
 			if(res.ok) {
+				alert(data.user.id)
 				setUser(data.user)
 				login(data.user)
 				router.push('/')	
@@ -85,37 +87,40 @@ export default function LoginPage() {
 			
 		}
 	}
-
 	return (
 		<div className="mt-16">
 			<LoadingSpinner isLoading={loading} />
+			
 
-			<h1 className="text-xl lg:text-3xl text-left lg:text-center mb-1 lg:mb-6">Enter your name</h1>
-			<form onSubmit={handleLogin}>
+			<h1 className="text-xl lg:text-3xl text-left lg:text-center mb-1 lg:mb-6">Login</h1>
+			<form onSubmit={handleLogin} style={{justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center"}}>
 				<input
 				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
 				type="text"
 				placeholder="JhonDoe@gmail.com"
 				value={email} // Bind the input value to 'username'
+				style={{marginRight: 1, marginBottom: 1, borderRadius: 10, width: 400}}
 				onChange={handleInputEmailChange} // Handle input changes
 				/>
 				<input
-				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
+				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800"
 				type="password"
 				placeholder="password"
 				value={password} // Bind the input value to 'username'
+				style={{marginBottom: -6, borderRadius: 10, width: 400}}
 				onChange={handleInputPasswordChange} // Handle input changes
 				/>
 
 				<button
 				type="submit"
 				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl bg-teal-500 font-medium rounded-r-lg lg:rounded-r-xl mt-2"
-				
+				style={{borderRadius: 10}}
 				>
 				Submit
 				
 				</button>
 			</form>
+			
 		</div>
   );
 }

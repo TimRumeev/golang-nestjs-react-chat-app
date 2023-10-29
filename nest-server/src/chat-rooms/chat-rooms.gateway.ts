@@ -40,7 +40,6 @@ export class ChatRoomsGateway implements OnGatewayInit {
 		console.log(`Server initializied`);
 	}
 	//@UsePipes(new ValidationPipe())
-	@UseGuards(SocketAuthGuard)
 	@SubscribeMessage(SOCKET_EVENT.JOIN_CHAT_ROOM)
 	async handleJoinChatRoom(
 		@ConnectedSocket() client: ISocket,

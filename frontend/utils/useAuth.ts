@@ -73,19 +73,15 @@ export function useAuth() {
 
 export function useAuthRedirect({
   user,
-  jwt,
   redirectTo = "/login",
 }: {
   user: User | undefined;
-  jwt: string | undefined;
   redirectTo?: string;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    console.log(user?.id, user?.email, user?.username);
-
-    if (!isLoading && !jwt) {
+    if (!isLoading && !user?.id) {
       console.log("Redirecting to login page");
       router.push("/login");
     }
