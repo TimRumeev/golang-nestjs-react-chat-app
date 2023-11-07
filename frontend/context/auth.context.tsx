@@ -12,7 +12,7 @@ export interface UserContextInterface {
   setUser: Dispatch<SetStateAction<User>>;
 }
 
-const defaultState = {
+export const defaultState = {
   user: {},
   setUser: (user: User) => {},
 } as UserContextInterface;

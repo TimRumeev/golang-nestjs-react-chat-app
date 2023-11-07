@@ -4,10 +4,8 @@ import { Socket, io } from "socket.io-client";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
 import env from "@/constants/env.constant";
 import axios from "axios";
-import { User } from "@/types/model.type";
-import { NextRequest } from "next/server";
-import { RequestCookie } from "next/dist/compiled/@edge-runtime/cookies";
-import { UserContext } from "@/context/auth.context";
+import { UserContext, defaultState } from "@/context/auth.context";
+import { useCookies } from "react-cookie";
 
 export function useAuth() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -72,19 +70,35 @@ export function useAuth() {
 }
 
 export function useAuthRedirect({
-  user,
   redirectTo = "/login",
 }: {
-  user: User | undefined;
   redirectTo?: string;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { user, setUser } = useContext(UserContext);
+  const [cookies, setCookies, removeCookies] = useCookies(["jwt"]);
   useEffect(() => {
-    if (!isLoading && !user?.id) {
+    if (!loading && !cookies) {
+      if (user) {
+        setUser(defaultState.user);
+      }
       console.log("Redirecting to login page");
       router.push("/login");
+    } else if (cookies && !user) {
+      const res = axios
+        .get(`${env.API_BASE_URL}/v1/auth/getUserByJwt`, {
+          withCredentials: true,
+        })
+        .then((res1) => {
+          setUser(res1.data.user);
+        })
+        .catch((err) => {
+          setError(err.message);
+          setLoading(false);
+        });
     }
-    setIsLoading(false);
-  }, [router, user, redirectTo, isLoading]);
+    setLoading(false);
+  }, [router, cookies, redirectTo, loading]);
 }

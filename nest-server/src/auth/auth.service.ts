@@ -1,10 +1,17 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
+import {
+	Injectable,
+	InternalServerErrorException,
+	Req,
+	Res,
+	UnauthorizedException,
+} from "@nestjs/common";
 import { compare, genSalt, hash } from "bcryptjs";
 import { PrismaService } from "src/database/database.service";
 import { CreateUserDto } from "./dto/create.user.dto";
 import { LoginUserDto } from "./dto/login.user.dto";
 import { JwtService } from "@nestjs/jwt";
 import { UserModel } from "@prisma/client";
+import { NextFunction, Request } from "express";
 
 @Injectable()
 export class AuthService {
@@ -73,5 +80,16 @@ export class AuthService {
 		// return {
 		// 	access_token: await this.jwtService.signAsync(payload, { secret: "secret " }),
 		// };
+	}
+
+	async parseJwt(jwt: string) {
+		const decoded = this.jwtService.decode(jwt);
+		const email = decoded["email"];
+		const user = this.prismaService.userModel.findFirst({
+			where: {
+				email: email,
+			},
+		});
+		return user;
 	}
 }

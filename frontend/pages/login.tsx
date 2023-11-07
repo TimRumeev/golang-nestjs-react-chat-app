@@ -61,7 +61,6 @@ export default function LoginPage() {
 			
 			const data = await res.json()
 			if(res.ok) {
-				alert(data.user.id)
 				setUser(data.user)
 				login(data.user)
 				router.push('/')	

@@ -6,7 +6,6 @@ import {NextRouter, useRouter} from "next/router"
 import React, { useContext, useEffect, useState } from "react";
 import { ErrorBox } from "../components/ErrorBox";
 import { LoadingSpinner } from "../components/Loading";
-import { getCookie } from "cookies-next";
 import { UserContext } from "@/context/auth.context";
 import env from "@/constants/env.constant";
 
@@ -23,11 +22,14 @@ async function getChatRoomsData(router: NextRouter) {
 		const code = axios.get(`${env.API_BASE_URL}/v1/chat-rooms`, { withCredentials: true})
 		if((await code).status === 401) { 
 			router.push('/login')
-		}
+		} 
 		const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
 		return data
 	} catch (err) { 
-		if (err instanceof AxiosError) { 
+		if (err instanceof AxiosError) {
+			if(err.code === "ERR_BAD_REQUEST") {
+				router.push("/login")
+			} 
 			console.log({
 				code: err.code,
 				status: err.response?.status,
@@ -46,7 +48,8 @@ export default function Home() {
 	const [error, setError] = useState("")
 	const {user, setUser} = useContext(UserContext)
 	
-	useAuthRedirect({user})
+	useAuthRedirect({})
+
 	useEffect(() => {
 		const res = getChatRoomsData(router)
 			.then((res) => {

@@ -5,7 +5,9 @@ import {
 	Get,
 	HttpCode,
 	Post,
+	Req,
 	Res,
+	UnauthorizedException,
 	UsePipes,
 	ValidationPipe,
 	Version,
@@ -13,7 +15,7 @@ import {
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login.user.dto";
 import { CreateUserDto } from "./dto/create.user.dto";
-import { Response as res, response } from "express";
+import { NextFunction, Request, Response as res, response } from "express";
 import { ApiTags } from "@nestjs/swagger";
 @ApiTags("Auth")
 @Controller("auth")
@@ -55,4 +57,18 @@ export class AuthController {
 		response.cookie("jwt", "", { expires: new Date() });
 	}
 	//, { expires: new Date() }
+	@Version("1")
+	@Get("getUserByJwt")
+	async getUserByJwt(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+		next: NextFunction,
+	) {
+		const cookies = req.cookies;
+		const user = this.authService.parseJwt(cookies);
+		if (!user) {
+			throw new UnauthorizedException("cookie err");
+		}
+		return { user: user };
+	}
 }

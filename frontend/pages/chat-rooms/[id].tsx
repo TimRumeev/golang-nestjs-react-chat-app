@@ -8,8 +8,6 @@ import { ErrorBox } from "../../components/ErrorBox";
 import { LoadingSpinner } from "../../components/Loading";
 import env from "@/constants/env.constant";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
-import { cookies } from "next/headers";
-import { getCookie } from "cookies-next";
 import { UserContext } from "@/context/auth.context";
 
 
@@ -55,8 +53,7 @@ export default function chatRoomPage() {
   	const [loading, setLoading] = useState(true);
   	const [error, setError] = useState('');
 	const {user, setUser} = useContext(UserContext)
-	
-	useAuthRedirect({user})
+	useAuthRedirect({})
 
 	useEffect(() => {
 		// getChatRoomData(id)
@@ -158,7 +155,8 @@ export default function chatRoomPage() {
 
 			<div className="mt-4 grid gap-4 lg:gap-8 bg-slate-500 p-6 lg:p-20 rounded-2xl pb-60">
 				{chats?.map((chat, index) => {
-					const isCurrentUser = true; // Updated to check user._id
+					const chatUser = chat.user
+					const isCurrentUser = chatUser.id === user.id // Updated to check user._id
 
 					let className =
 						'w-9/12 p-4 lg:p-6 border-b border-gray-300 bg-gradient-to-b from-zinc-200 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit static rounded-xl border bg-gray-200 lg:dark:bg-zinc-800/30';
