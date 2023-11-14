@@ -8,28 +8,21 @@ import { ErrorBox } from "../components/ErrorBox";
 import { LoadingSpinner } from "../components/Loading";
 import { UserContext } from "@/context/auth.context";
 import env from "@/constants/env.constant";
+import { time } from "console";
 
 
 
 async function getChatRoomsData(router: NextRouter) {
 	try {
-		// const res = await axios.get("http://localhost:3001/v1/chat-rooms")
-		// console.log((await res).status);
 		
-		// if((await res).status == 401) { 
-		// 	router.push("/login")
-		// }
-		const code = axios.get(`${env.API_BASE_URL}/v1/chat-rooms`, { withCredentials: true})
-		if((await code).status === 401) { 
-			router.push('/login')
-		} 
 		const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
+		
 		return data
 	} catch (err) { 
 		if (err instanceof AxiosError) {
 			if(err.code === "ERR_BAD_REQUEST") {
 				router.push("/login")
-			} 
+			}
 			console.log({
 				code: err.code,
 				status: err.response?.status,
@@ -40,6 +33,7 @@ async function getChatRoomsData(router: NextRouter) {
 		throw new Error("Unknown error")
 	}
 }
+
 export default function Home() {
 	const { socket, joinChatRoom } = useAuth()
 	const router = useRouter()
@@ -47,20 +41,58 @@ export default function Home() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
 	const {user, setUser} = useContext(UserContext)
-	
+	const [roomName, setRoomName] = useState("")
 	useAuthRedirect({})
+	
 
 	useEffect(() => {
+		
 		const res = getChatRoomsData(router)
-			.then((res) => {
+	
+		res.then((res) => {
 				setData(res)
 				setLoading(false)
 			})
 			.catch((err) => {
+			
 				setError(err.message)
 				setLoading(false)
 			});
+		
 	}, []);
+	const handleCreateRoom = async(e: React.SyntheticEvent) => { 
+		e.preventDefault()
+
+		const nm = 	roomName.trim()
+		if(!nm) return alert("Please, enter room name")
+
+		setLoading(true)
+
+		try{
+			axios.post("http://localhost:3001/v1/chat-rooms/create", {
+				name: nm
+			}, {withCredentials: true})
+			
+		} catch(error) { 
+			if(error instanceof AxiosError) { 
+				console.log({
+					code: error.code,
+					message: error.message,
+					status: error.response?.status,
+					error: error.response?.status
+				});
+				
+			}
+		} finally{
+			setRoomName("")
+			setLoading(false)
+			location.reload()
+		}
+	}
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setRoomName(e.target.value)
+	}
 
 	const handleJoinChatRoom = (chatRoomId: number) => {
 		joinChatRoom(chatRoomId)
@@ -74,7 +106,21 @@ export default function Home() {
 
       <LoadingSpinner isLoading={loading} />
       <ErrorBox error={error} />
-
+	  <form onSubmit={handleCreateRoom}>
+		<input
+          className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl outline-none text-gray-800 rounded-l-lg lg:rounded-l-xl"
+          type="text"
+          placeholder="Room name"
+          value={roomName} // Bind the input value to 'username'
+          onChange={handleInputChange} // Handle input changes
+        />
+		<button
+          type="submit"
+          className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl bg-teal-500 font-medium rounded-r-lg lg:rounded-r-xl mt-2"
+        >
+          Submit
+        </button>
+	  </form>
       <div className="mt-10 grid md:grid-cols-2 gap-8">
         {!loading &&
           !error &&

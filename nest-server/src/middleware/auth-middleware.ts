@@ -11,7 +11,6 @@ export class AuthMiddleware implements NestMiddleware {
 	) {}
 	//req: Request, res: Response, next: NextFunction
 	use(@Req() req: Request, @Res({ passthrough: true }) res: Response, next: NextFunction) {
-		// const cookie = this.getCookie(req);
 		try {
 			const cookies = req.cookies;
 			const decoded = this.jwtService.decode(cookies.jwt);
@@ -21,13 +20,10 @@ export class AuthMiddleware implements NestMiddleware {
 					email: email,
 				},
 			});
-			if (!user) {
-				throw new UnauthorizedException("cookie err");
-			}
 		} catch (e) {
 			throw new UnauthorizedException("user is not authorized");
 		}
-		res.statusCode = 401;
+
 		next();
 	}
 

@@ -30,6 +30,10 @@ export default function LoginPage() {
 		setPassword(e.target.value)
 	}
 
+	const handleRegister = () => {
+		router.push("/register")
+	}
+
 	const handleLogin = async (e: React.SyntheticEvent) => { 
 		e.preventDefault()
 
@@ -38,7 +42,7 @@ export default function LoginPage() {
 		if(!em) return alert("Please enter email")
 
 		const ps = password.trim()
-
+		
 		if(!ps) return alert("Please enter password")
 
 		setLoading(true)
@@ -54,7 +58,7 @@ export default function LoginPage() {
 				body: JSON.stringify({ email, password }),
 					
 			})
-			axios.post("http://localhost:3001/v1/auth/login", {
+			await axios.post("http://localhost:3001/v1/auth/login", {
 				email: email,
 				password: password
 			}, {withCredentials: true})
@@ -118,7 +122,22 @@ export default function LoginPage() {
 				Submit
 				
 				</button>
+				
 			</form>
+			<h1 className="text-xl lg:text-3xl text-left lg:text-center mb-1 lg:mb-6 mt-4">or</h1>
+			
+			<div style={{justifyContent: "center", display: "flex", flexDirection: "column", alignItems: "center"}}>
+				<button
+				onSubmit={handleRegister}
+				type="submit"
+				className="px-4 py-2 lg:px-6 lg:py-3 lg:text-xl bg-teal-500 font-medium rounded-r-lg lg:rounded-r-xl mt-2"
+				style={{borderRadius: 10}}
+				>
+				Register
+			
+				</button>
+			</div>
+			
 			
 		</div>
   );

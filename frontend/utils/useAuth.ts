@@ -81,12 +81,15 @@ export function useAuthRedirect({
   const [cookies, setCookies, removeCookies] = useCookies(["jwt"]);
   useEffect(() => {
     if (!loading && !cookies) {
+      console.log("!LOADING !COOKIES");
+
       if (user) {
         setUser(defaultState.user);
       }
       console.log("Redirecting to login page");
       router.push("/login");
     } else if (cookies && !user) {
+      console.log("COOKIES !USER");
       const res = axios
         .get(`${env.API_BASE_URL}/v1/auth/getUserByJwt`, {
           withCredentials: true,

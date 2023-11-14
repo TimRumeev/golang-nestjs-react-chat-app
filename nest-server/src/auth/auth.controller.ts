@@ -28,11 +28,19 @@ export class AuthController {
 		const oldUser = await this.authService.findUser(dto.email);
 		if (oldUser) {
 			const jwt = this.authService.loginUser(dto.email);
-			response.cookie("jwt", (await jwt).token);
+			response.cookie("jwt", (await jwt).token, {
+				expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+				secure: false,
+			});
 			throw new BadRequestException("USER HAS BEEN ALREADY REGISTERED");
 		}
-
-		return this.authService.createUser(dto);
+		const user = await this.authService.createUser(dto);
+		const jwt = this.authService.loginUser(user.email);
+		response.cookie("jwt", (await jwt).token, {
+			expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
+			secure: false,
+		});
+		return { user };
 	}
 	@Version("1")
 	//@UsePipes(new ValidationPipe())
