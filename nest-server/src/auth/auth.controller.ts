@@ -4,6 +4,7 @@ import {
 	Controller,
 	Get,
 	HttpCode,
+	Logger,
 	Post,
 	Req,
 	Res,
@@ -21,21 +22,17 @@ import { ApiTags } from "@nestjs/swagger";
 @Controller("auth")
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
-
+	@Version("1")
 	//@UsePipes(new ValidationPipe())
+	@HttpCode(200)
 	@Post("register")
 	async register(@Body() dto: CreateUserDto, @Res({ passthrough: true }) response: res) {
 		const oldUser = await this.authService.findUser(dto.email);
 		if (oldUser) {
-			const jwt = this.authService.loginUser(dto.email);
-			response.cookie("jwt", (await jwt).token, {
-				expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
-				secure: false,
-			});
 			throw new BadRequestException("USER HAS BEEN ALREADY REGISTERED");
 		}
 		const user = await this.authService.createUser(dto);
-		const jwt = this.authService.loginUser(user.email);
+		const jwt = await this.authService.loginUser(dto.email);
 		response.cookie("jwt", (await jwt).token, {
 			expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
 			secure: false,
