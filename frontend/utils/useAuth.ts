@@ -3,13 +3,14 @@ import { useRouter } from "next/router";
 import { Socket, io } from "socket.io-client";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
 import env from "@/constants/env.constant";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { UserContext, defaultState } from "@/context/auth.context";
 import { useCookies } from "react-cookie";
 
 export function useAuth() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const { user, setUser } = useContext(UserContext);
+  const router = useRouter();
 
   socket?.on("connect", () => {
     console.info(`Socket connected: ${socket?.id}`);
@@ -25,7 +26,7 @@ export function useAuth() {
     }
   }, []);
 
-  const login = (userData: {
+  const socketSet = (userData: {
     id: number;
     username: string;
     email: string;
@@ -58,9 +59,86 @@ export function useAuth() {
     socket?.emit(SOCKET_EVENT.DELETE_MESSAGE_CHAT_ROOM, payload);
   };
 
+  async function register(email: string, username: string, password: string) {
+    try {
+      const res = await fetch(`${env.API_BASE_URL}/v1/auth/register`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        alert(data.user.id);
+
+        socketSet(data.user);
+        router.push("/");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.log({
+          code: error.code,
+          message: error.message,
+          status: error.response?.status,
+          error: error.response?.data,
+        });
+      }
+    }
+  }
+
+  async function login(email: string, password: string) {
+    try {
+      // const { data } = await apiService.post<User>('/v1/auth/login', { em, ps })
+
+      const res = await fetch(`${env.API_BASE_URL}/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      await axios.post(
+        "http://localhost:3001/v1/auth/login",
+        {
+          email: email,
+          password: password,
+        },
+        { withCredentials: true }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        socketSet(data.user);
+        router.push("/");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.log({
+          code: error.code,
+          message: error.message,
+          status: error.response?.status,
+          error: error.response?.data,
+        });
+
+        if (error.response?.data) return alert(error.response.data.message);
+
+        return alert("auth failed");
+      }
+      console.log(error);
+      alert("Unknown error");
+    }
+  }
+
   return {
     user,
+    register,
     login,
+    socketSet,
     logout,
     socket,
     joinChatRoom,

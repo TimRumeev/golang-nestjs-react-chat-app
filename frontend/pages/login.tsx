@@ -17,7 +17,7 @@ export default function LoginPage() {
 	const [loading, setLoading] = useState(false)
 	const {user, setUser} = useContext(UserContext)
 	const [username, setUsername] = useState('')
-	const { login } = useAuth()
+	const { login, register } = useAuth()
 	const [email1, setEmail1] = useState('')
 	const [password1, setPassword1] = useState('')
 	// if(!context)  { 
@@ -55,38 +55,9 @@ export default function LoginPage() {
 
 		setLoading(true)
 
-		try { 
-			console.log(email1, username, password1);
-			
-			const res = await fetch(`${env.API_BASE_URL}/v1/auth/register`, {
-				method: "POST",
-				credentials: "include",
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: email1, username: username, password: password1 }),
-			})
-			
-			
-			const data = await res.json()
-			if(res.ok) {
-				
-				setUser(data.user)
-				alert(data.user.id)
-				
-				login(data.user)
-				router.push('/')	
-			}
-		} catch(error) { 
-			if(error instanceof AxiosError) { 
-				console.log({
-					code: error.code,
-					message: error.message,
-					status: error.response?.status,
-					error: error.response?.data
-				})
-			}
-		} finally{
-			setLoading(false)
-		}
+		register(em, ps, un)
+
+		setLoading(false)
 	}
 
 	const handleLogin = async (e: React.SyntheticEvent) => { 
@@ -102,48 +73,9 @@ export default function LoginPage() {
 
 		setLoading(true)
 		
-		
+		login(em, ps)
 
-		try{
-			// const { data } = await apiService.post<User>('/v1/auth/login', { em, ps })
-			
-			const res = await fetch(`${env.API_BASE_URL}/v1/auth/login`, {
-				method: "POST",
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email, password }),
-					
-			})
-			await axios.post("http://localhost:3001/v1/auth/login", {
-				email: email,
-				password: password
-			}, {withCredentials: true})
-			
-			const data = await res.json()
-			if(res.ok) {
-				setUser(data.user)
-				login(data.user)
-				router.push('/')	
-			}	
-			
-		} catch(error) { 
-			if (error instanceof AxiosError) { 
-				console.log({
-					code: error.code,
-					message: error.message,
-					status: error.response?.status,
-					error: error.response?.data
-				});
-
-				if(error.response?.data) return alert(error.response.data.message)
-
-				return alert('auth failed')
-			}
-			console.log(error);
-			alert('Unknown error')
-		} finally{
-			setLoading(false)
-			
-		}
+		setLoading(false)
 	}
 	return (
 		<div className="mt-16">
