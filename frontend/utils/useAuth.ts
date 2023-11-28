@@ -36,7 +36,7 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    const res = axios.get("http://localhost:3001/v1/auth/logout", {
+    const res = axios.get(`${env.API_BASE_URL}/v1/auth/logout`, {
       withCredentials: true,
     });
 
@@ -102,7 +102,7 @@ export function useAuth() {
         body: JSON.stringify({ email, password }),
       });
       await axios.post(
-        "http://localhost:3001/v1/auth/login",
+        `${env.API_BASE_URL}/v1/auth/login`,
         {
           email: email,
           password: password,

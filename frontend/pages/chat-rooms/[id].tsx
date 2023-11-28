@@ -23,7 +23,11 @@ async function getChatRoomData(id: string) {
 		// }
 		
 		const id1 = Number(id)
-		const res = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`)
+		const res = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`, {
+			method: "GET",
+			headers: { 'Content-Type': 'application/json' },
+			credentials: "include"
+		})
 		// if (res.status === 401) { 
 		// 	return null;
 		// }

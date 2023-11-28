@@ -15,9 +15,16 @@ import { time } from "console";
 async function getChatRoomsData(router: NextRouter) {
 	try {
 		
-		const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
+		// const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
+		const data = await fetch(`${env.API_BASE_URL}/v1/chat-rooms`, {
+        	method: "GET",
+        	credentials: "include",
+        	headers: { "Content-Type": "application/json" },
+        
+      	});
+		const res = data.json()
 		
-		return data
+		return res
 	} catch (err) { 
 		if (err instanceof AxiosError) {
 			if(err.code === "ERR_BAD_REQUEST") {
@@ -69,7 +76,7 @@ export default function Home() {
 		setLoading(true)
 
 		try{
-			axios.post("http://localhost:3001/v1/chat-rooms/create", {
+			axios.post(`${env.API_BASE_URL}/v1/chat-rooms/create`, {
 				name: nm
 			}, {withCredentials: true})
 			
