@@ -24,13 +24,11 @@ import { error, log } from "console";
 export class AuthGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 	@WebSocketServer()
 	server: Server;
-
 	constructor(private readonly authService: AuthService) {}
 
 	afterInit(server: Server) {
 		Logger.log(`${AuthGateway.name} initialized`);
 	}
-
 	async handleConnection(client: ISocket, ...args: any[]) {
 		const { id } = client;
 		const { userId } = client.handshake.query;
@@ -54,8 +52,7 @@ export class AuthGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 		Logger.log(`Client connected`, { id, user: client.data.user });
 	}
-
-	handleDisconnect(client: ISocket) {
+	async handleDisconnect(client: ISocket) {
 		const { id } = client;
 		const { user } = client.data;
 

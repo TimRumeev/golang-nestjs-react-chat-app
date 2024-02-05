@@ -1,11 +1,11 @@
-import React, { use, useContext, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useReducer, useState } from "react";
 import { useRouter } from "next/router";
 import { Socket, io } from "socket.io-client";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
 import env from "@/constants/env.constant";
 import axios, { AxiosError } from "axios";
 import { UserContext, defaultState } from "@/context/auth.context";
-import { useCookies } from "react-cookie";
+import { useCookies, withCookies } from "react-cookie";
 
 export function useAuth() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -22,7 +22,12 @@ export function useAuth() {
   //ADD COOKIES AUTH!!!!!!!!!!!!!!!!
   useEffect(() => {
     if (user.id) {
-      setSocket(io(env.SOCKET_SERVER_URL, { query: { userId: user.id } }));
+      setSocket(
+        io(env.SOCKET_SERVER_URL, {
+          query: { userId: user.id },
+          transports: ["websocket", "polling"],
+        })
+      );
     }
   }, []);
 
@@ -32,7 +37,12 @@ export function useAuth() {
     email: string;
     password?: string;
   }) => {
-    setSocket(io(env.SOCKET_SERVER_URL, { query: { userId: userData.id } }));
+    setSocket(
+      io(env.SOCKET_SERVER_URL, {
+        query: { userId: userData.id },
+        transports: ["websocket", "polling"],
+      })
+    );
   };
 
   const logout = async () => {
@@ -45,13 +55,12 @@ export function useAuth() {
   };
 
   const joinChatRoom = (chatRoomId: number) => {
-    socket?.emit(SOCKET_EVENT.JOIN_CHAT_ROOM, { chatRoomId });
+    socket?.emit(SOCKET_EVENT.JOIN_CHAT_ROOM, { dto: chatRoomId });
   };
 
   const sendMessageChatRoom = (chatRoomId: number, message: string) => {
     socket?.emit(SOCKET_EVENT.NEW_MESSAGE_CHAT_ROOM, { chatRoomId, message });
   };
-
   const deleteMessageChatRoom = (payload: {
     chatRoomId: number;
     chatId: number;
@@ -71,7 +80,11 @@ export function useAuth() {
           password,
         }),
       });
-
+      await axios.post(
+        `${env.API_BASE_URL}/v1/auth/register`,
+        { email: email, username: username, password: password },
+        { withCredentials: true }
+      );
       const data = await res.json();
       if (res.ok) {
         setUser(data.user);
@@ -88,6 +101,11 @@ export function useAuth() {
           status: error.response?.status,
           error: error.response?.data,
         });
+        if ((error.message = "USER HAS BEEN ALREADY REGISTERED")) {
+          alert("user is already registered, try to login");
+        } else if (error.message) {
+          alert("invalid data. try again");
+        }
       }
     }
   }
@@ -114,8 +132,8 @@ export function useAuth() {
       if (res.ok) {
         setUser(data.user);
         socketSet(data.user);
-        router.push("/");
       }
+      return data;
     } catch (error) {
       if (error instanceof AxiosError) {
         console.log({
@@ -147,17 +165,35 @@ export function useAuth() {
   };
 }
 
-export function useAuthRedirect({
+export async function useAuthRedirect({
   redirectTo = "/login",
+  chatRoomId = undefined,
 }: {
   redirectTo?: string;
+  chatRoomId?: number;
 }) {
   const router = useRouter();
+  const { socket, socketSet } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, setUser } = useContext(UserContext);
   const [cookies, setCookies, removeCookies] = useCookies(["jwt"]);
   useEffect(() => {
+    // if (!socket) {
+    //   if (window.location.href == "http://localhost:3000/chat-rooms/") {
+    //     socketSet(user);
+    //   }
+    // }
+    // if (socket) {
+    //   if (
+    //     window.location.href == `http://localhost:3000/chat-rooms/${chatRoomId}`
+    //   ) {
+    //     if (chatRoomId) {
+    //       socket?.emit(SOCKET_EVENT.JOIN_CHAT_ROOM, { chatRoomId });
+    //     }
+    //   }
+    // }
+
     if (!loading && !cookies) {
       console.log("!LOADING !COOKIES");
 
@@ -166,20 +202,24 @@ export function useAuthRedirect({
       }
       console.log("Redirecting to login page");
       router.push("/login");
-    } else if (cookies && !user) {
+      setLoading(false);
+    }
+    if (!user.id) {
       console.log("COOKIES !USER");
       const res = axios
         .get(`${env.API_BASE_URL}/v1/auth/getUserByJwt`, {
           withCredentials: true,
         })
-        .then((res1) => {
-          setUser(res1.data.user);
+        .then((res) => {
+          setUser(res.data);
+          console.log(res.data.id);
         })
         .catch((err) => {
           setError(err.message);
           setLoading(false);
         });
     }
+
     setLoading(false);
   }, [router, cookies, redirectTo, loading]);
 }

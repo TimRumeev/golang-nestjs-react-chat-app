@@ -16,7 +16,7 @@ import {
 import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login.user.dto";
 import { CreateUserDto } from "./dto/create.user.dto";
-import { NextFunction, Request, Response as res, response } from "express";
+import { NextFunction, Request as req, Response as res, response } from "express";
 import { ApiTags } from "@nestjs/swagger";
 @ApiTags("Auth")
 @Controller("auth")
@@ -33,9 +33,10 @@ export class AuthController {
 		}
 		const user = await this.authService.createUser(dto);
 		const jwt = await this.authService.loginUser(dto.email);
-		response.cookie("jwt", (await jwt).token, {
+		response.cookie("jwt", jwt.token, {
 			expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
 			secure: false,
+			sameSite: false,
 		});
 		return { user };
 	}
@@ -49,6 +50,7 @@ export class AuthController {
 		response.cookie("jwt", (await jwt).token, {
 			expires: new Date(Date.now() + 1000 * 60 * 60 * 24),
 			secure: false,
+			httpOnly: false,
 		});
 		const user = await this.authService.findUser(email);
 
@@ -65,15 +67,15 @@ export class AuthController {
 	@Version("1")
 	@Get("getUserByJwt")
 	async getUserByJwt(
-		@Req() req: Request,
+		@Req() request: req,
 		@Res({ passthrough: true }) res: Response,
 		next: NextFunction,
 	) {
-		const cookies = req.cookies;
+		const cookies = request.cookies;
 		const user = this.authService.parseJwt(cookies);
 		if (!user) {
 			throw new UnauthorizedException("cookie err");
 		}
-		return { user: user };
+		return user;
 	}
 }

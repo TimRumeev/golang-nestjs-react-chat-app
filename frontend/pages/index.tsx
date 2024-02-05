@@ -9,25 +9,30 @@ import { LoadingSpinner } from "../components/Loading";
 import { UserContext } from "@/context/auth.context";
 import env from "@/constants/env.constant";
 import { time } from "console";
+import { Socket, io } from "socket.io-client";
 
 
 
-async function getChatRoomsData(router: NextRouter) {
+async function getChatRoomsData(router: NextRouter, setError: React.Dispatch<React.SetStateAction<string>>) {
 	try {
-		
 		// const {data} = await apiService.get<ChatRoomsData>("/v1/chat-rooms", {withCredentials: true})
-		const data = await fetch(`${env.API_BASE_URL}/v1/chat-rooms`, {
-        	method: "GET",
-        	credentials: "include",
-        	headers: { "Content-Type": "application/json" },
-        
-      	});
-		const res = data.json()
+			const data = await fetch(`${env.API_BASE_URL}/v1/chat-rooms`, {
+				method: "GET",
+				credentials: "include",
+				headers: { "Content-Type": "application/json" },
+			
+			});
+			if(data.status == 401) {
+				setError("err")
+				router.push('/login')
+			}
+			const res = data.json()
 		
 		return res
 	} catch (err) { 
 		if (err instanceof AxiosError) {
 			if(err.code === "ERR_BAD_REQUEST") {
+				setError("err")
 				router.push("/login")
 			}
 			console.log({
@@ -35,27 +40,52 @@ async function getChatRoomsData(router: NextRouter) {
 				status: err.response?.status,
 				error: err.response?.data
 			});
+			if(err.status == 401) {
+				setError("err")
+				router.push('/login')
+			}
 			throw new Error("Failed connect to server")
 		}
 		throw new Error("Unknown error")
 	}
 }
-
+async function getUserData () {
+	const res = await fetch(`${env.API_BASE_URL}/v1/auth/getUserByJwt`, {credentials: 'include'})
+	const data = await res.json()
+	return data
+}
 export default function Home() {
-	const { socket, joinChatRoom } = useAuth()
+	const { joinChatRoom, socketSet } = useAuth()
 	const router = useRouter()
 	const [data, setData] = useState<ChatRoomsData>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
 	const {user, setUser} = useContext(UserContext)
+	const [socket, setSocket] = useState<Socket | null>(null);
+
 	const [roomName, setRoomName] = useState("")
 	useAuthRedirect({})
 	
-
 	useEffect(() => {
+		if (!user.id) {
+			const res = getUserData()
+				res.then((res) => {
+					if(res.ok) {
+						setUser(res);
+						console.log("index.tsx");
+						
+					}
+					
+					
+				})
+				.catch((err) => {
+				setError(err.message);
+				setLoading(false);
+				})
+			
+		}
 		
-		const res = getChatRoomsData(router)
-	
+		const res = getChatRoomsData(router, setError)
 		res.then((res) => {
 				setData(res)
 				setLoading(false)

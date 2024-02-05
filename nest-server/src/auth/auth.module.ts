@@ -26,5 +26,6 @@ import { AuthGateway } from "./auth.gateway";
 			signOptions: { expiresIn: "24h" },
 		}),
 	],
+	exports: [AuthGateway],
 })
 export class AuthModule {}

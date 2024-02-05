@@ -1,5 +1,5 @@
 import {useRouter} from "next/router"
-import React, { PropsWithChildren, Children, createContext, useContext, useState, Dispatch, SetStateAction } from "react";
+import React, { PropsWithChildren, Children, createContext, useContext, useState, Dispatch, SetStateAction, useEffect } from "react";
 import { User, UserInfo } from "../types/model.type";
 import axios, { AxiosError } from "axios";
 import { LoadingSpinner } from "../components/Loading";
@@ -55,12 +55,16 @@ export default function LoginPage() {
 
 		setLoading(true)
 
-		register(em, ps, un)
+		const res = register(em, ps, un)
+		res.then((res) => {
+			router.push('/')
+		})
 
 		setLoading(false)
 	}
 
 	const handleLogin = async (e: React.SyntheticEvent) => { 
+		setLoading(true)
 		e.preventDefault()
 
 		const em = email.trim()
@@ -71,10 +75,11 @@ export default function LoginPage() {
 		
 		if(!ps) return alert("Please enter password")
 
-		setLoading(true)
 		
-		login(em, ps)
-
+		const res = login(em, ps)
+		res.then((res) => {
+			router.push('/')
+		})
 		setLoading(false)
 	}
 	return (

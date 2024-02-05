@@ -12,6 +12,10 @@ import { ChatRoomsModule } from "./chat-rooms/chat-rooms.module";
 import { AppService } from "./app.service";
 import { AppController } from "./app.controller";
 import { ChatRoomsController } from "./chat-rooms/chat-rooms.controller";
+import { ChatRoomsGateway } from "./chat-rooms/chat-rooms.gateway";
+import { AuthGateway } from "./auth/auth.gateway";
+import { AuthService } from "./auth/auth.service";
+import { ChatRoomsService } from "./chat-rooms/chat-rooms.service";
 
 @Module({
 	imports: [

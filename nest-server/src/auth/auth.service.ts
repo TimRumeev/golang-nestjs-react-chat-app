@@ -1,6 +1,7 @@
 import {
 	Injectable,
 	InternalServerErrorException,
+	Logger,
 	Req,
 	Res,
 	UnauthorizedException,
@@ -12,6 +13,8 @@ import { LoginUserDto } from "./dto/login.user.dto";
 import { JwtService } from "@nestjs/jwt";
 import { UserModel } from "@prisma/client";
 import { NextFunction, Request } from "express";
+import { decode } from "punycode";
+import { LoaderTargetPlugin } from "webpack";
 
 @Injectable()
 export class AuthService {
@@ -82,12 +85,12 @@ export class AuthService {
 		// };
 	}
 
-	async parseJwt(jwt: string) {
-		const decoded = this.jwtService.decode(jwt);
+	async parseJwt(jwt: any) {
+		const decoded = this.jwtService.decode(jwt["jwt"]);
 		const email = decoded["email"];
-		const user = this.prismaService.userModel.findFirst({
+		const user = await this.prismaService.userModel.findFirst({
 			where: {
-				email: email,
+				email,
 			},
 		});
 		return user;

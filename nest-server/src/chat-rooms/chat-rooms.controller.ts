@@ -40,8 +40,13 @@ export class ChatRoomsController {
 	})
 	@Version("1")
 	@Get(":id")
-	async findById(@Param("id") id: number) {
-		const result = await this.chatRoomsService.findChatRoomById(id);
+	async findById(@Param("id") id: string) {
+		const id1 = Number(id);
+		if (typeof id1 != "number") {
+			return;
+		}
+		Logger.warn(id1);
+		const result = await this.chatRoomsService.findChatRoomById(id1);
 
 		if (!result) {
 			throw new NotFoundException("Chat room not found");

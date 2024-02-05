@@ -16,11 +16,20 @@ import { ISocket, TSocketUser } from "src/types/socket.type";
 import { SocketID } from "src/utils/socket.decorator";
 import { SocketUser } from "src/utils/socket.user.decorator";
 import { JoinChatRoomDto } from "./dto/join-chat-room.dto";
-import { ForbiddenException, Logger, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import {
+	BadRequestException,
+	ForbiddenException,
+	Logger,
+	NotFoundException,
+	UseGuards,
+	UsePipes,
+	ValidationPipe,
+} from "@nestjs/common";
 import { NewMessageChatRoomDto } from "./dto/new-message-chat-room.dto";
 import { DeleteChatRoomDto } from "./dto/delete-message-chat-room.dto";
 import e from "express";
 import { SocketAuthGuard } from "src/auth/guards/socket-auth.guard";
+import { AuthService } from "src/auth/auth.service";
 
 @WebSocketGateway({
 	cors: {
@@ -32,8 +41,10 @@ import { SocketAuthGuard } from "src/auth/guards/socket-auth.guard";
 	allowEIO3: true,
 })
 export class ChatRoomsGateway implements OnGatewayInit {
-	constructor(private chatRoomsService: ChatRoomsService) {}
-
+	constructor(
+		private readonly chatRoomsService: ChatRoomsService,
+		private readonly authService: AuthService,
+	) {}
 	@WebSocketServer() server: Server;
 
 	afterInit(server: any) {
@@ -54,7 +65,6 @@ export class ChatRoomsGateway implements OnGatewayInit {
 			chatRoomId,
 			userId,
 		);
-
 		if (isAlreadyJoined) {
 			Logger.warn(`User ${username} already joined`);
 			return;
@@ -64,7 +74,7 @@ export class ChatRoomsGateway implements OnGatewayInit {
 		const event = SOCKET_EVENT.JOINED_CHAT_ROOM;
 		const payload = { chatRoomId, user };
 
-		this.server.emit(event, payload);
+		client.emit(event, payload);
 		Logger.log({ emit: event, payload });
 		return { event: event, data: payload };
 	}
@@ -91,7 +101,7 @@ export class ChatRoomsGateway implements OnGatewayInit {
 
 		const event = SOCKET_EVENT.BROADCAST_NEW_MESSAGE_CHAT_ROOM;
 		const payload = { chatRoomId, chat };
-		this.server.emit(event, payload);
+		client.emit(event, payload);
 
 		Logger.log({ emit: event, payload });
 		return { event: event, data: payload };
@@ -118,7 +128,7 @@ export class ChatRoomsGateway implements OnGatewayInit {
 		const event = SOCKET_EVENT.DELETED_MESSAGE_CHAT_ROOM;
 		const payload = { chatRoomId, chatId };
 
-		this.server.emit(event, payload);
+		client.emit(event, payload);
 		Logger.log({ emit: event, payload });
 		return { event: event, data: payload };
 	}

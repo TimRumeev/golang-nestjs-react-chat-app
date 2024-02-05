@@ -9,6 +9,7 @@ import { LoadingSpinner } from "../../components/Loading";
 import env from "@/constants/env.constant";
 import { SOCKET_EVENT } from "@/constants/socket.constant";
 import { UserContext } from "@/context/auth.context";
+import { Socket, io } from "socket.io-client";
 
 
 async function getChatRoomData(id: string) {
@@ -23,13 +24,13 @@ async function getChatRoomData(id: string) {
 		// }
 		
 		const id1 = Number(id)
-		const res = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id1}`, {
+		const res = await fetch(`${env.API_BASE_URL}/v1/chat-rooms/${id}`, {
 			method: "GET",
 			headers: { 'Content-Type': 'application/json' },
 			credentials: "include"
 		})
 		// if (res.status === 401) { 
-		// 	return null;
+		// 	return null;	
 		// }
 		const data = res.json()
 		return data
@@ -51,43 +52,44 @@ async function getChatRoomData(id: string) {
 export default function chatRoomPage() { 
 	const router = useRouter();
   	const id = router.query.id as string;
-  	const { socket, sendMessageChatRoom, deleteMessageChatRoom } = useAuth(); // Updated to use `user` instead of `userId`
+  	const { socket, sendMessageChatRoom, deleteMessageChatRoom, socketSet, joinChatRoom  } = useAuth(); // Updated to use `user` instead of `userId`
   	const [data, setData] = useState<Omit<ChatRoom, 'chats'>>();
   	const [chats, setChats] = useState<Chat[]>();
   	const [loading, setLoading] = useState(true);
   	const [error, setError] = useState('');
 	const {user, setUser} = useContext(UserContext)
-	useAuthRedirect({})
-
+	useAuth()
+	useAuthRedirect({chatRoomId: parseInt(id)})
+	
 	useEffect(() => {
-		// getChatRoomData(id)
-		// 		.then((res) => {
-		// 			const { chats, ...rest } = res
-		// 			setData(rest)
-		// 			setChats(chats)
-		// 			setLoading(false)
-		// 		})
-		// 		.catch((err) => {
-		// 			setError(err.message)
-		// 			setLoading(false)
-		// 		})
+		if(router.isReady) {
+			const id1 = router.query.id as string
+			console.log(`room id: ${id1}`)
+			const res = getChatRoomData(id1)
+				
+			res.then((res) => {
+					const { chats, ...rest } = res
+					setData(rest)
+					setChats(chats)
+					setLoading(false)
+				})
+				.catch((err) => {
+					setError(err.message)
+					setLoading(false)
+				})
+		}
 		
-		const res = getChatRoomData(id)
-		if(!res) { 
-			router.push("/login")
-			return
-		}		
-		res.then((res) => {
-				const { chats, ...rest } = res
-				setData(rest)
-				setChats(chats)
-				setLoading(false)
-			})
-			.catch((err) => {
-				setError(err.message)
-				setLoading(false)
-			})
-	}, [id])
+		
+		
+		}, [id])
+		useEffect(() => {
+			if(user.id) {
+				if(!socket) {
+
+					socketSet(user)
+				}
+			}	
+		})
 
 	const [newMessage, setNewMessage] = useState('')
 
@@ -98,7 +100,8 @@ export default function chatRoomPage() {
 		e.preventDefault()
 
 		const trimmedMessage = newMessage.trim()
-
+		console.log(`handle submit message id: ${id}`);
+		
 		if(trimmedMessage !== "") {
 			sendMessageChatRoom(Number(id), trimmedMessage)
 		}
@@ -110,6 +113,8 @@ export default function chatRoomPage() {
 		SOCKET_EVENT.BROADCAST_NEW_MESSAGE_CHAT_ROOM,
 		(payload: { chatRoomId : number; chat: Chat }) => {
 			const { chatRoomId, chat } = payload
+			console.log(`broadcast new message chat room id: ${id}`);
+			console.log(`broadcast chatroomid: ${chatRoomId}`)
 			if(chatRoomId === Number(id) && !chats?.some((existingChat) => existingChat.id === chat.id)) {
 
 				if(!chats) { 
@@ -137,7 +142,7 @@ export default function chatRoomPage() {
 		SOCKET_EVENT.DELETED_MESSAGE_CHAT_ROOM,
 		(payload: { chatRoomId: number; chatId: number }) => {
 			const { chatRoomId,chatId } = payload
-
+			
 			if(chatRoomId === Number(id)) { 
 				const newChats = chats?.filter((chat) => chat.id !== chatId)
 				setChats(newChats)
@@ -173,7 +178,7 @@ export default function chatRoomPage() {
 						// => index
 						<div key={chat.id} className={className}>
 							
-							<p className="text-sm font-medium mb-1 text-gray-400">~ {user.username}</p>
+							<p className="text-sm font-medium mb-1 text-gray-400">~ {chat.user.id}</p>
 							<p>{chat.message}</p>
 							<p className="text-right text-gray-400">
 								{isCurrentUser && (

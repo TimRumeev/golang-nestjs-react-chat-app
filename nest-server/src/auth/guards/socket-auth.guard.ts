@@ -23,7 +23,6 @@ export class SocketAuthGuard implements CanActivate {
 		const client = context.switchToWs().getClient();
 		const cookies: string[] = client.handshake.headers.cookie;
 		const jwt = cookies["jwt"];
-		Logger.warn(jwt);
 		const jwtPayload = this.jwtService.verify(jwt, { secret: "secret" });
 		const decoded = this.jwtService.decode(jwtPayload);
 		const email = decoded["email"];
